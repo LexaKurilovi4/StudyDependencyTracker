@@ -3,8 +3,7 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import networkx as nx
-
-from graph_manager import GraphManager
+from src.graph_manager import GraphManager
 
 
 class GraphCanvas(FigureCanvas):
@@ -12,7 +11,7 @@ class GraphCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=5, height=5, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
-        self.fig.patch.set_facecolor('#1a1b1f')  # Темный фон окна
+        self.fig.patch.set_facecolor('#1a1b1f') 
         self.ax = self.fig.add_subplot(111)
         self.ax.set_facecolor('#1a1b1f')
         super().__init__(self.fig)

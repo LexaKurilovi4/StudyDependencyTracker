@@ -1,18 +1,12 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from gui import App
-
+from src.gui import App
 
 def main() -> None:
-    """Точка входа в приложение PyQt6."""
-    app: QApplication = QApplication(sys.argv)
-    app.setStyle("Fusion")
-
-    window: App = App()
+    app = QApplication(sys.argv)
+    window = App()
     window.show()
-
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()

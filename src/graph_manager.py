@@ -1,6 +1,7 @@
 import networkx as nx
 from typing import List, Dict
-from models import Task
+from src.models import Task
+
 
 class GraphManager:
     """Менеджер управления графом задач с автогенерацией ID."""
@@ -16,6 +17,13 @@ class GraphManager:
         return new_id
 
     def add_task(self, name: str, duration: float) -> Task:
+        """
+        Создает задачу с авто-ID и добавляет в граф.
+        Проверяет, чтобы длительность была строго положительной.
+        """
+        if duration <= 0:
+            raise ValueError("Длительность задачи должна быть больше нуля.")
+
         task_id: str = self.generate_id()
         task: Task = Task(task_id=task_id, name=name, duration_hours=duration)
         self.tasks[task_id] = task
@@ -23,8 +31,14 @@ class GraphManager:
         return task
 
     def add_dependency(self, from_id: str, to_id: str) -> None:
+        """
+        Добавление направленной связи (ребра) между задачами.
+        Направление ребра: from_id -> to_id.
+        Это означает, что задача from_id блокирует задачу to_id
+        (to_id нельзя начать до завершения from_id).
+        """
         if from_id not in self.tasks or to_id not in self.tasks:
-            raise KeyError(f"Задачи с указанными ID ({from_id} или {to_id}) не найдены.")
+            raise KeyError(f"Задачи с ID {from_id} или {to_id} не найдены.")
 
         self.graph.add_edge(from_id, to_id)
 
