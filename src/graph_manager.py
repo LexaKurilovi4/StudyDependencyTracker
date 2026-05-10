@@ -1,15 +1,17 @@
 import networkx as nx
-from typing import List, Dict
+import json
+from typing import List, Dict, Tuple
 from src.models import Task
 
 
 class GraphManager:
-    """Менеджер управления графом задач с автогенерацией ID."""
+    """Менеджер управления графом задач с сохранением состояния."""
 
     def __init__(self) -> None:
         self.graph: nx.DiGraph = nx.DiGraph()
         self.tasks: Dict[str, Task] = {}
         self._id_counter: int = 1
+        self.positions: Dict[str, Tuple[float, float]] = {}
 
     def generate_id(self) -> str:
         new_id: str = str(self._id_counter)
@@ -17,10 +19,6 @@ class GraphManager:
         return new_id
 
     def add_task(self, name: str, duration: float) -> Task:
-        """
-        Создает задачу с авто-ID и добавляет в граф.
-        Проверяет, чтобы длительность была строго положительной.
-        """
         if duration <= 0:
             raise ValueError("Длительность задачи должна быть больше нуля.")
 
@@ -31,12 +29,6 @@ class GraphManager:
         return task
 
     def add_dependency(self, from_id: str, to_id: str) -> None:
-        """
-        Добавление направленной связи (ребра) между задачами.
-        Направление ребра: from_id -> to_id.
-        Это означает, что задача from_id блокирует задачу to_id
-        (to_id нельзя начать до завершения from_id).
-        """
         if from_id not in self.tasks or to_id not in self.tasks:
             raise KeyError(f"Задачи с ID {from_id} или {to_id} не найдены.")
 
@@ -52,12 +44,43 @@ class GraphManager:
     def clear_all(self) -> None:
         self.graph.clear()
         self.tasks.clear()
+        self.positions.clear()
         self._id_counter = 1
 
     def get_critical_path(self) -> List[str]:
+        """Возвращает список ID задач, составляющих самый длинный путь (критический путь)."""
         if not self.tasks:
             return []
         try:
             return nx.dag_longest_path(self.graph, weight="duration")
         except nx.NetworkXUnfeasible:
             return []
+
+    def save_to_json(self, filepath: str) -> None:
+        data = {
+            "id_counter": self._id_counter,
+            "tasks": [{"task_id": t.task_id, "name": t.name, "duration_hours": t.duration_hours} for t in
+                      self.tasks.values()],
+            "edges": list(self.graph.edges()),
+            "positions": {node: list(pos) for node, pos in self.positions.items()}
+        }
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
+    def load_from_json(self, filepath: str) -> None:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        self.clear_all()
+        self._id_counter = data.get("id_counter", 1)
+
+        for t_data in data.get("tasks", []):
+            task = Task(**t_data)
+            self.tasks[task.task_id] = task
+            self.graph.add_node(task.task_id, name=task.name, duration=task.duration_hours)
+
+        for u, v in data.get("edges", []):
+            self.graph.add_edge(u, v)
+
+        if "positions" in data:
+            self.positions = {node: tuple(pos) for node, pos in data["positions"].items()}
