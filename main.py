@@ -3,9 +3,12 @@ import warnings
 from PyQt6.QtWidgets import QApplication
 from src.gui import App
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+def main():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    app = QApplication(sys.argv)
+    window = App()
+    window.show()
+    sys.exit(app.exec())
 
-app = QApplication(sys.argv)
-window = App()
-window.show()
-sys.exit(app.exec())
+if __name__ == "__main__":
+    main()
